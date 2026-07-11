@@ -6,7 +6,7 @@
 
     <groupId>org.openintegrationengine.plugins</groupId>
     <artifactId>websupport</artifactId>
-    <version>0.1.0</version>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
 
     <name>OIE Web Support</name>
@@ -16,33 +16,41 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- Point at an OIE installation (or a built engine tree) that provides the engine jars. -->
-        <oie.home>${env.OIE_HOME}</oie.home>
+        <!-- Engine version this build targets. The 4.5.2 engine jars are resolved
+             from the repsy mirror below (4.6.0 isn't published there yet, which is
+             why the 4.6.0 build sources them from a local OIE_HOME instead). -->
+        <mirth.version>4.5.2</mirth.version>
     </properties>
 
+    <repositories>
+        <!-- Community mirror carrying the Mirth/OIE engine artifacts (4.5.2). -->
+        <repository>
+            <id>repsy-mirth</id>
+            <url>https://repo.repsy.io/mvn/kpalang/mirthconnect</url>
+        </repository>
+    </repositories>
+
     <dependencies>
-        <!-- Engine jars: provided by the running engine, sourced from an install for compilation. -->
+        <!-- Engine jars: provided by the running engine at runtime; resolved from the
+             repsy mirror for compilation (no local OIE install needed). -->
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>mirth-server</artifactId>
-            <version>4.6.0</version>
-            <scope>system</scope>
-            <systemPath>${oie.home}/server-lib/mirth-server.jar</systemPath>
+            <version>${mirth.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>mirth-client-core</artifactId>
-            <version>4.6.0</version>
-            <scope>system</scope>
-            <systemPath>${oie.home}/server-lib/mirth-client-core.jar</systemPath>
+            <version>${mirth.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- SerializationType (IMessageSerializer's serialization mode) lives in donkey-model. -->
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>donkey-model</artifactId>
-            <version>4.6.0</version>
-            <scope>system</scope>
-            <systemPath>${oie.home}/server-lib/donkey/donkey-model.jar</systemPath>
+            <version>${mirth.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- APIs present on the engine classpath at runtime; compile against Central copies. -->
