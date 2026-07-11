@@ -1,0 +1,96 @@
+# Auto-files a version manifest PR to the community catalog when a release is
+# published. Releases here are created manually (gh release create), which DOES
+# trigger `on: release` — only GITHUB_TOKEN-created releases don't.
+#
+# Requires the CATALOG_TOKEN secret: a fine-grained PAT with Contents and
+# Pull requests read/write on the catalog repository.
+name: Catalog PR
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to file (e.g. v1.0.1) — for backfilling"
+        required: true
+
+jobs:
+  catalog-manifest:
+    runs-on: ubuntu-latest
+    env:
+      CATALOG_REPO: gibson9583/oie-community-catalog
+      PLUGIN_ID: websupport
+      GH_TOKEN: ${{ secrets.CATALOG_TOKEN }}
+    steps:
+      - name: Require the catalog token
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::CATALOG_TOKEN secret is not set — cannot open the catalog PR. Add a fine-grained PAT with Contents+Pull requests access to $CATALOG_REPO."
+            exit 1
+          fi
+
+      - name: Resolve tag and version
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Download and digest the release asset
+        run: |
+          # Public asset URL, no auth: CATALOG_TOKEN is scoped to the catalog repo
+          # and fine-grained PATs can 404 on API reads outside their grant.
+          curl -fL --retry 5 --retry-delay 5 -o asset.zip \
+            "https://github.com/${{ github.repository }}/releases/download/${TAG}/${PLUGIN_ID}-${VERSION}.zip"
+          echo "SHA256=$(sha256sum asset.zip | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      - name: Read minEngineVersion from the tagged oie.json
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/$TAG/oie.json" -o oie.json
+          echo "MIN_ENGINE=$(node -p "JSON.parse(require('fs').readFileSync('oie.json','utf8')).minEngineVersion")" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: gibson9583/oie-community-catalog
+          token: ${{ secrets.CATALOG_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Write the version manifest
+        run: |
+          mkdir -p "manifests/plugins/${PLUGIN_ID}"
+          cat > "manifests/plugins/${PLUGIN_ID}/${VERSION}.json" <<EOF
+          {
+              "version": "${VERSION}",
+              "minEngineVersion": "${MIN_ENGINE}",
+              "maxEngineVersion": null,
+              "installerUrl": "https://github.com/${{ github.repository }}/releases/download/${TAG}/${PLUGIN_ID}-${VERSION}.zip",
+              "sha256": "${SHA256}",
+              "restartRequired": true,
+              "publishedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "releaseNotesUrl": "https://github.com/${{ github.repository }}/releases/tag/${TAG}",
+              "docsUrl": "https://raw.githubusercontent.com/${{ github.repository }}/${TAG}/docs/store.md"
+          }
+          EOF
+
+      - name: Validate (schema + digest download)
+        run: node scripts/build-index.mjs --lint --verify "manifests/plugins/${PLUGIN_ID}/${VERSION}.json"
+
+      - name: Open the catalog PR
+        run: |
+          BRANCH="${PLUGIN_ID}-${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add manifests
+          git commit -m "${PLUGIN_ID} ${VERSION}"
+          git push -f origin "$BRANCH"
+          if gh pr list -R "$CATALOG_REPO" --head "$BRANCH" --json number -q '.[0].number' | grep -q .; then
+            echo "PR already open for $BRANCH — branch updated."
+          else
+            gh pr create -R "$CATALOG_REPO" --head "$BRANCH" \
+              --title "${PLUGIN_ID} ${VERSION}" \
+              --body "Automated manifest for [${PLUGIN_ID} ${TAG}](https://github.com/${{ github.repository }}/releases/tag/${TAG}). Digest computed from the release asset by this workflow and verified again by catalog CI."
+          fi
