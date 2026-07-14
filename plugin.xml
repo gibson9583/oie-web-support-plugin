@@ -1,7 +1,7 @@
 <pluginMetaData path="websupport">
 	<name>Web Support</name>
 	<author>Chris Gibson</author>
-	<pluginVersion>0.1.0</pluginVersion>
+	<pluginVersion>0.1.1</pluginVersion>
 	<mirthVersion>4.6.0</mirthVersion>
 	<url>https://openintegrationengine.org</url>
 	<description>REST endpoints that back the web administrator: byte-exact message serialization through the engine's own data type serializers (with vocabulary descriptions), server-side JavaScript validation, and static serving of installed extensions' web UI halves. Endpoints only — no UI of its own.</description>

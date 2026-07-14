@@ -44,10 +44,12 @@ jobs:
             "https://github.com/${{ github.repository }}/releases/download/${TAG}/${PLUGIN_ID}-${VERSION}.zip"
           echo "SHA256=$(sha256sum asset.zip | cut -d' ' -f1)" >> "$GITHUB_ENV"
 
-      - name: Read minEngineVersion from the tagged oie.json
+      - name: Read minEngineVersion and ui from the tagged oie.json
         run: |
           curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/$TAG/oie.json" -o oie.json
           echo "MIN_ENGINE=$(node -p "JSON.parse(require('fs').readFileSync('oie.json','utf8')).minEngineVersion")" >> "$GITHUB_ENV"
+          # Empty when the tagged oie.json has no ui field (older tags).
+          echo "UI=$(node -p "const ui = JSON.parse(require('fs').readFileSync('oie.json','utf8')).ui; ui === undefined ? '' : JSON.stringify(ui)")" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v4
         with:
@@ -61,9 +63,14 @@ jobs:
       - name: Write the version manifest
         run: |
           mkdir -p "manifests/plugins/${PLUGIN_ID}"
+          # "ui" is included only when the tagged oie.json declares it.
+          UI_LINE=""
+          if [ -n "$UI" ]; then
+            UI_LINE=$'\n'"    \"ui\": ${UI},"
+          fi
           cat > "manifests/plugins/${PLUGIN_ID}/${VERSION}.json" <<EOF
           {
-              "version": "${VERSION}",
+              "version": "${VERSION}",${UI_LINE}
               "minEngineVersion": "${MIN_ENGINE}",
               "maxEngineVersion": null,
               "installerUrl": "https://github.com/${{ github.repository }}/releases/download/${TAG}/${PLUGIN_ID}-${VERSION}.zip",
