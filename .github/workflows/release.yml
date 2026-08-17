@@ -55,7 +55,7 @@ jobs:
           mkdir -p engine-dist engine-home
           gh release download "v${ENGINE_VERSION}" -R "$ENGINE_REPOSITORY" -p "$ENGINE_ASSET" -D engine-dist
           tar -xzf "engine-dist/$ENGINE_ASSET" -C engine-home
-          SERVER_LIB="$(find engine-home -type d -name server-lib -print -quit)"
+          SERVER_LIB="$(find "$GITHUB_WORKSPACE/engine-home" -type d -name server-lib -print -quit)"
           if [ -z "$SERVER_LIB" ]; then
             echo "::error::The OIE distribution contains no server-lib directory"
             exit 1
