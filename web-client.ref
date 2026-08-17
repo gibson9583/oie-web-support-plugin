@@ -1,0 +1,5 @@
+# The oie-web-client commit or tag bundled into the OIE Web Client extension.
+# Pin to a tag or a full commit SHA for reproducible releases; override per-run
+# with the WEB_CLIENT_REF repository variable. Bump this in the same commit that
+# tags a release when you want a newer client in the bundle.
+acf117eeb153adfda75c87ad1e4ba55bd12a5654
