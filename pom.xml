@@ -6,16 +6,20 @@
 
     <groupId>org.openintegrationengine.plugins</groupId>
     <artifactId>websupport</artifactId>
-    <version>0.1.1</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>OIE Web Support</name>
-    <description>Engine-side REST endpoints backing the OIE web administrator: data type serialization, JavaScript validation, and web plugin asset serving. No engine changes, no UI.</description>
+    <description>OIE web administrator bundle: the embedded browser client plus its engine-side REST endpoints.</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- GitHub Release version of oie-webadmin.war bundled by release.yml.
+             Keep this equal to the plugin version when the release lines match;
+             set it independently when the web client and plugin diverge. -->
+        <webclient.version>0.6.0</webclient.version>
         <!-- Point at an OIE installation (or a built engine tree) that provides the engine jars. -->
         <oie.home>${env.OIE_HOME}</oie.home>
     </properties>
@@ -70,12 +74,27 @@
             <version>2.2.15</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Logging. Provided: the engine ships log4j2 on its own classpath. -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.23.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <finalName>websupport-shared</finalName>
         <plugins>
-            <!-- Assemble the installable extension zip: websupport/{plugin.xml, jar}. -->
+            <!-- Assemble one installable extension containing the APIs and WAR. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -95,6 +114,12 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+            </plugin>
         </plugins>
     </build>
+
 </project>

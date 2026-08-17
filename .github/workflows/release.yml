@@ -1,0 +1,121 @@
+# Builds the single Web Support extension. The web-client repository publishes
+# oie-webadmin.war as a release asset; this workflow consumes the client version
+# declared in pom.xml and records its exact tag and digest.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      ENGINE_REPOSITORY: OpenIntegrationEngine/engine
+      WEB_CLIENT_REPOSITORY: gibson9583/oie-web-client
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout Web Support
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Resolve and verify versions
+        id: versions
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          MANIFEST_VERSION="$(jq -r .version oie.json)"
+          PLUGIN_VERSION="$(sed -n 's:.*<pluginVersion>\(.*\)</pluginVersion>.*:\1:p' plugin.xml)"
+          WEB_CLIENT_VERSION="$(sed -n 's:.*<webclient.version>\(.*\)</webclient.version>.*:\1:p' pom.xml)"
+          if [ "$VERSION" != "$MANIFEST_VERSION" ] || [ "$VERSION" != "$PLUGIN_VERSION" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} must match oie.json (${MANIFEST_VERSION}) and plugin.xml (${PLUGIN_VERSION})"
+            exit 1
+          fi
+          if [ -z "$WEB_CLIENT_VERSION" ]; then
+            echo "::error::pom.xml must declare webclient.version"
+            exit 1
+          fi
+          ENGINE_VERSION="$(jq -r .minEngineVersion oie.json)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "engine-version=$ENGINE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "web_client_version=$WEB_CLIENT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download the OIE compile-time distribution
+        run: |
+          ENGINE_VERSION="${{ steps.versions.outputs.engine-version }}"
+          ENGINE_ASSET="oie_unix_${ENGINE_VERSION//./_}.tar.gz"
+          mkdir -p engine-dist engine-home
+          gh release download "v${ENGINE_VERSION}" -R "$ENGINE_REPOSITORY" -p "$ENGINE_ASSET" -D engine-dist
+          tar -xzf "engine-dist/$ENGINE_ASSET" -C engine-home
+          SERVER_LIB="$(find engine-home -type d -name server-lib -print -quit)"
+          if [ -z "$SERVER_LIB" ]; then
+            echo "::error::The OIE distribution contains no server-lib directory"
+            exit 1
+          fi
+          echo "OIE_HOME=${SERVER_LIB%/server-lib}" >> "$GITHUB_ENV"
+
+      - name: Download the declared web client release
+        id: webclient
+        run: |
+          WEB_CLIENT_TAG="v${{ steps.versions.outputs.web_client_version }}"
+          mkdir -p web-client-release
+          gh release download "$WEB_CLIENT_TAG" -R "$WEB_CLIENT_REPOSITORY" \
+            -p oie-webadmin.war -D web-client-release
+          WEB_CLIENT_SHA256="$(sha256sum web-client-release/oie-webadmin.war | cut -d' ' -f1)"
+          jar --list --file web-client-release/oie-webadmin.war | grep -qx 'index.jsp'
+          jar --list --file web-client-release/oie-webadmin.war | grep -qx 'WEB-INF/web.xml'
+          echo "tag=$WEB_CLIENT_TAG" >> "$GITHUB_OUTPUT"
+          echo "sha256=$WEB_CLIENT_SHA256" >> "$GITHUB_OUTPUT"
+
+      - name: Build Web Support
+        run: |
+          mvn -B -ntp package \
+            -Dwebclient.war="$GITHUB_WORKSPACE/web-client-release/oie-webadmin.war"
+
+      - name: Validate and stage release assets
+        id: assets
+        run: |
+          VERSION="${{ steps.versions.outputs.version }}"
+          PACKAGE="target/websupport-${VERSION}.zip"
+          test -f "$PACKAGE"
+          unzip -Z1 "$PACKAGE" | grep -qx 'websupport/plugin.xml'
+          unzip -Z1 "$PACKAGE" | grep -qx 'websupport/websupport-shared.jar'
+          unzip -Z1 "$PACKAGE" | grep -qx 'websupport/oie-webadmin.war'
+          unzip -p "$PACKAGE" websupport/oie-webadmin.war > bundled.war
+          test "$(sha256sum bundled.war | cut -d' ' -f1)" = "${{ steps.webclient.outputs.sha256 }}"
+          mkdir -p out
+          cp "$PACKAGE" out/
+          (cd out && sha256sum *.zip > SHA256SUMS)
+          echo "package=$(basename "$PACKAGE")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/${{ steps.assets.outputs.package }}
+            out/SHA256SUMS
+          body: |
+            `${{ steps.assets.outputs.package }}` is the complete Web Support extension:
+
+            - engine-side APIs for message trees, JavaScript validation, and plugin UIs
+            - the embedded OIE web administrator, served at `/oie-webadmin/`
+
+            Bundled web client: `${{ env.WEB_CLIENT_REPOSITORY }}@${{ steps.webclient.outputs.tag }}`
+
+            WAR SHA-256: `${{ steps.webclient.outputs.sha256 }}`
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  catalog-manifest:
+    needs: release
+    uses: ./.github/workflows/catalog-pr.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
