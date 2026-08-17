@@ -1,0 +1,28 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.1"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.1 http://maven.apache.org/xsd/assembly-2.1.1.xsd">
+    <id>web-client</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <!-- A standalone extension (path "oie-webadmin") that deploys the web-client
+         WAR. Independent of the Web Support APIs; install either or both. -->
+    <files>
+        <file>
+            <source>web-client-plugin.xml</source>
+            <outputDirectory>oie-webadmin</outputDirectory>
+            <destName>plugin.xml</destName>
+        </file>
+        <file>
+            <source>${project.build.directory}/websupport-shared-webclient-deploy.jar</source>
+            <outputDirectory>oie-webadmin</outputDirectory>
+            <destName>webclient-deploy.jar</destName>
+        </file>
+        <file>
+            <source>${webclient.war}</source>
+            <outputDirectory>oie-webadmin</outputDirectory>
+            <destName>oie-web-client.war</destName>
+        </file>
+    </files>
+</assembly>

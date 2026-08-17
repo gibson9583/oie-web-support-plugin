@@ -1,0 +1,12 @@
+<pluginMetaData path="oie-webadmin">
+	<name>OIE Web Client</name>
+	<author>Chris Gibson</author>
+	<pluginVersion>0.1.1</pluginVersion>
+	<mirthVersion>4.6.0</mirthVersion>
+	<url>https://github.com/gibson9583/oie-web-client</url>
+	<description>Deploys the OIE web administrator — a browser-based replacement for the Swing Administrator — into this OIE server's embedded Jetty, served at /oie-web-client/ after a restart. Install the Web Support plugin alongside it for message trees and JavaScript validation.</description>
+	<serverClasses>
+		<string>org.openintegrationengine.plugins.websupport.WebClientDeployServicePlugin</string>
+	</serverClasses>
+	<library type="SERVER" path="webclient-deploy.jar" />
+</pluginMetaData>

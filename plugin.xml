@@ -4,7 +4,10 @@
 	<pluginVersion>0.1.1</pluginVersion>
 	<mirthVersion>4.6.0</mirthVersion>
 	<url>https://openintegrationengine.org</url>
-	<description>REST endpoints that back the web administrator: byte-exact message serialization through the engine's own data type serializers (with vocabulary descriptions), server-side JavaScript validation, and static serving of installed extensions' web UI halves. Endpoints only — no UI of its own.</description>
+	<description>REST endpoints that back the web administrator: byte-exact message serialization through the engine's own data type serializers (with vocabulary descriptions), server-side JavaScript validation, and static serving of installed extensions' web UI halves. A companion OIE Web Client extension deploys the browser administrator into the engine.</description>
+	<serverClasses>
+		<string>org.openintegrationengine.plugins.websupport.WebSupportServicePlugin</string>
+	</serverClasses>
 	<library type="SHARED" path="websupport-shared.jar" />
 	<apiProvider type="SERVLET_INTERFACE" name="org.openintegrationengine.plugins.websupport.WebSupportServletInterface"/>
 	<apiProvider type="SERVER_CLASS" name="org.openintegrationengine.plugins.websupport.WebSupportServlet"/>

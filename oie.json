@@ -2,7 +2,7 @@
     "schemaVersion": 1,
     "id": "websupport",
     "name": "Web Support",
-    "description": "Engine-side endpoints for the OIE web administrator: byte-exact message serialization, JavaScript validation, and web plugin UI serving. Endpoints only — no UI. Install this first; everything else can then flow through the Community Store.",
+    "description": "Engine-side endpoints for the OIE web administrator: byte-exact message serialization, JavaScript validation, and web plugin UI serving. A companion OIE Web Client extension (id oie-webadmin) can deploy the browser client into the engine.",
     "type": "plugin",
     "ui": [],
     "version": "0.1.1",
@@ -15,6 +15,6 @@
     "storeDocs": "docs/store.md",
     "license": "MPL-2.0",
     "authors": ["Chris Gibson"],
-    "keywords": ["web", "administrator", "serialization", "validation"],
+    "keywords": ["web", "administrator", "serialization", "validation", "war"],
     "deprecated": false
 }

@@ -1,0 +1,22 @@
+{
+    "schemaVersion": 1,
+    "id": "oie-webadmin",
+    "name": "OIE Web Client",
+    "description": "Deploys the browser-based OIE web administrator into this engine's embedded Jetty (served at /oie-web-client/). Install alongside Web Support for message trees and JavaScript validation.",
+    "type": "plugin",
+    "ui": [],
+    "version": "0.1.1",
+    "minEngineVersion": "4.6.0",
+    "maxEngineVersion": null,
+    "filename": "websupport-web-client-{version}.zip",
+    "restartRequired": true,
+    "publisher": "Chris Gibson",
+    "homepage": "https://github.com/gibson9583/oie-web-client",
+    "documentation": "https://github.com/gibson9583/oie-web-client#readme",
+    "repository": "https://github.com/gibson9583/oie-web-support-plugin",
+    "storeDocs": "docs/store-web-client.md",
+    "license": "MPL-2.0",
+    "authors": ["Chris Gibson"],
+    "keywords": ["web", "administrator", "client", "war"],
+    "deprecated": false
+}

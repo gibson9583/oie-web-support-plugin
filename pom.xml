@@ -70,11 +70,47 @@
             <version>2.2.15</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Logging. Provided: the engine ships log4j2 on its own classpath. -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.23.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <finalName>websupport-shared</finalName>
         <plugins>
+            <!-- Second jar carrying only the WAR-deploy service plugin. The OIE Web
+                 Client extension can be installed without Web Support, so it must
+                 ship this class itself rather than rely on the shared library. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>webclient-deploy-jar</id>
+                        <phase>prepare-package</phase>
+                        <goals><goal>jar</goal></goals>
+                        <configuration>
+                            <classifier>webclient-deploy</classifier>
+                            <includes>
+                                <include>org/openintegrationengine/plugins/websupport/WebClientDeployServicePlugin.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Assemble the installable extension zip: websupport/{plugin.xml, jar}. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -95,6 +131,48 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+            </plugin>
         </plugins>
     </build>
+
+    <!-- Supplying -Dwebclient.war=/path/to/oie-web-client.war adds a second,
+         bundled extension ZIP while retaining the normal API-only artifact. -->
+    <profiles>
+        <profile>
+            <id>web-client-bundle</id>
+            <activation>
+                <property>
+                    <name>webclient.war</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.6.0</version>
+                        <executions>
+                            <execution>
+                                <id>extension-zip-with-web-client</id>
+                                <phase>package</phase>
+                                <goals><goal>single</goal></goals>
+                                <configuration>
+                                    <descriptors combine.self="override">
+                                        <descriptor>src/main/assembly/extension-zip-web-client.xml</descriptor>
+                                    </descriptors>
+                                    <finalName>websupport-web-client-${project.version}</finalName>
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <attach>false</attach>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
