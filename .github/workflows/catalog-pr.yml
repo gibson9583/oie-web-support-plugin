@@ -1,11 +1,11 @@
 # Auto-files version manifests to the community catalog when a release is
-# published. One release ships two independent extensions, so this files a
-# catalog PR for each: Web Support (APIs, id `websupport`) and OIE Web Client
-# (WAR host, id `oie-webadmin`). The matrix seeds a package's meta.json the first
-# time it enters the catalog, then only adds version manifests thereafter.
+# published. Each release contains one Web Support extension with both the APIs
+# and embedded web administrator. The workflow seeds the package's meta.json the
+# first time it enters the catalog, then only adds version manifests thereafter.
 #
-# Releases here are created manually (gh release create), which DOES trigger
-# `on: release` — only GITHUB_TOKEN-created releases don't.
+# The tag release calls this as a reusable workflow because a release created by
+# GITHUB_TOKEN does not trigger `on: release`. That event remains for releases
+# published manually.
 #
 # Requires the CATALOG_TOKEN secret: a fine-grained PAT with Contents and
 # Pull requests read/write on the catalog repository.
@@ -32,17 +32,6 @@ on:
 jobs:
   catalog-manifest:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # id must equal the plugin.xml path so the store's installed-detection matches.
-          - id: websupport
-            asset: websupport
-            metafile: oie.json
-          - id: oie-webadmin
-            asset: websupport-web-client
-            metafile: oie.web-client.json
     env:
       CATALOG_REPO: gibson9583/oie-community-catalog
       GH_TOKEN: ${{ secrets.CATALOG_TOKEN }}
@@ -65,12 +54,12 @@ jobs:
           # Public asset URL, no auth: CATALOG_TOKEN is scoped to the catalog repo
           # and fine-grained PATs can 404 on API reads outside their grant.
           curl -fL --retry 5 --retry-delay 5 -o asset.zip \
-            "https://github.com/${{ github.repository }}/releases/download/${TAG}/${{ matrix.asset }}-${VERSION}.zip"
+            "https://github.com/${{ github.repository }}/releases/download/${TAG}/websupport-${VERSION}.zip"
           echo "SHA256=$(sha256sum asset.zip | cut -d' ' -f1)" >> "$GITHUB_ENV"
 
       - name: Read package metadata from the tagged manifest
         run: |
-          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/$TAG/${{ matrix.metafile }}" -o metafile.json
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/$TAG/oie.json" -o metafile.json
           echo "MIN_ENGINE=$(node -p "JSON.parse(require('fs').readFileSync('metafile.json','utf8')).minEngineVersion")" >> "$GITHUB_ENV"
           # Empty when the tagged manifest has no ui field (older tags).
           echo "UI=$(node -p "const ui = JSON.parse(require('fs').readFileSync('metafile.json','utf8')).ui; ui === undefined ? '' : JSON.stringify(ui)")" >> "$GITHUB_ENV"
@@ -96,7 +85,7 @@ jobs:
 
       - name: Write the manifests
         run: |
-          DIR="manifests/plugins/${{ matrix.id }}"
+          DIR="manifests/plugins/websupport"
           mkdir -p "$DIR"
           # Seed stable metadata the first time this package enters the catalog.
           # (catalog CI rejects a package that has meta.json but no version manifest,
@@ -114,7 +103,7 @@ jobs:
               "version": "${VERSION}",${UI_LINE}
               "minEngineVersion": "${MIN_ENGINE}",
               "maxEngineVersion": null,
-              "installerUrl": "https://github.com/${{ github.repository }}/releases/download/${TAG}/${{ matrix.asset }}-${VERSION}.zip",
+              "installerUrl": "https://github.com/${{ github.repository }}/releases/download/${TAG}/websupport-${VERSION}.zip",
               "sha256": "${SHA256}",
               "restartRequired": true,
               "publishedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
@@ -124,21 +113,21 @@ jobs:
           EOF
 
       - name: Validate (schema + digest download)
-        run: node scripts/build-index.mjs --lint --verify "manifests/plugins/${{ matrix.id }}/${VERSION}.json"
+        run: node scripts/build-index.mjs --lint --verify "manifests/plugins/websupport/${VERSION}.json"
 
       - name: Open the catalog PR
         run: |
-          BRANCH="${{ matrix.id }}-${VERSION}"
+          BRANCH="websupport-${VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add manifests
-          git commit -m "${{ matrix.id }} ${VERSION}"
+          git commit -m "websupport ${VERSION}"
           git push -f origin "$BRANCH"
           if gh pr list -R "$CATALOG_REPO" --head "$BRANCH" --json number -q '.[0].number' | grep -q .; then
             echo "PR already open for $BRANCH — branch updated."
           else
             gh pr create -R "$CATALOG_REPO" --head "$BRANCH" \
-              --title "${{ matrix.id }} ${VERSION}" \
-              --body "Automated manifest for [${{ matrix.id }} ${TAG}](https://github.com/${{ github.repository }}/releases/tag/${TAG}). Digest computed from the release asset by this workflow and verified again by catalog CI."
+              --title "websupport ${VERSION}" \
+              --body "Automated manifest for [websupport ${TAG}](https://github.com/${{ github.repository }}/releases/tag/${TAG}). Digest computed from the release asset by this workflow and verified again by catalog CI."
           fi

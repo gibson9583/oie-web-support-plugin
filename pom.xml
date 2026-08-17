@@ -6,16 +6,20 @@
 
     <groupId>org.openintegrationengine.plugins</groupId>
     <artifactId>websupport</artifactId>
-    <version>0.1.1</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>OIE Web Support</name>
-    <description>Engine-side REST endpoints backing the OIE web administrator: data type serialization, JavaScript validation, and web plugin asset serving. No engine changes, no UI.</description>
+    <description>OIE web administrator bundle: the embedded browser client plus its engine-side REST endpoints.</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- GitHub Release version of oie-webadmin.war bundled by release.yml.
+             Keep this equal to the plugin version when the release lines match;
+             set it independently when the web client and plugin diverge. -->
+        <webclient.version>0.6.0</webclient.version>
         <!-- Point at an OIE installation (or a built engine tree) that provides the engine jars. -->
         <oie.home>${env.OIE_HOME}</oie.home>
     </properties>
@@ -90,28 +94,7 @@
     <build>
         <finalName>websupport-shared</finalName>
         <plugins>
-            <!-- Second jar carrying only the WAR-deploy service plugin. The OIE Web
-                 Client extension can be installed without Web Support, so it must
-                 ship this class itself rather than rely on the shared library. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.4.1</version>
-                <executions>
-                    <execution>
-                        <id>webclient-deploy-jar</id>
-                        <phase>prepare-package</phase>
-                        <goals><goal>jar</goal></goals>
-                        <configuration>
-                            <classifier>webclient-deploy</classifier>
-                            <includes>
-                                <include>org/openintegrationengine/plugins/websupport/WebClientDeployServicePlugin.class</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- Assemble the installable extension zip: websupport/{plugin.xml, jar}. -->
+            <!-- Assemble one installable extension containing the APIs and WAR. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -139,40 +122,4 @@
         </plugins>
     </build>
 
-    <!-- Supplying -Dwebclient.war=/path/to/oie-web-client.war adds a second,
-         bundled extension ZIP while retaining the normal API-only artifact. -->
-    <profiles>
-        <profile>
-            <id>web-client-bundle</id>
-            <activation>
-                <property>
-                    <name>webclient.war</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.6.0</version>
-                        <executions>
-                            <execution>
-                                <id>extension-zip-with-web-client</id>
-                                <phase>package</phase>
-                                <goals><goal>single</goal></goals>
-                                <configuration>
-                                    <descriptors combine.self="override">
-                                        <descriptor>src/main/assembly/extension-zip-web-client.xml</descriptor>
-                                    </descriptors>
-                                    <finalName>websupport-web-client-${project.version}</finalName>
-                                    <appendAssemblyId>false</appendAssemblyId>
-                                    <attach>false</attach>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

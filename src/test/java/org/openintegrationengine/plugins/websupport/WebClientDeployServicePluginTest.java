@@ -31,7 +31,7 @@ class WebClientDeployServicePluginTest {
         Files.createDirectories(extension);
 
         assertFalse(WebClientDeployServicePlugin.installBundledWar(extension, oieHome));
-        assertFalse(Files.exists(oieHome.resolve("webapps/oie-web-client.war")));
+        assertFalse(Files.exists(oieHome.resolve("webapps/oie-webadmin.war")));
     }
 
     @Test

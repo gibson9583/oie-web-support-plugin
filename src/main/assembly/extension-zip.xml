@@ -15,5 +15,10 @@
             <source>${project.build.directory}/websupport-shared.jar</source>
             <outputDirectory>websupport</outputDirectory>
         </file>
+        <file>
+            <source>${webclient.war}</source>
+            <outputDirectory>websupport</outputDirectory>
+            <destName>oie-webadmin.war</destName>
+        </file>
     </files>
 </assembly>

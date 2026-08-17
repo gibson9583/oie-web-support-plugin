@@ -16,11 +16,9 @@ import com.mirth.connect.plugins.ServicePlugin;
 /**
  * Service plugin for the Web Support REST endpoints.
  *
- * <p>Web Support ships only the engine-side APIs the web administrator needs
- * (message serialization, JavaScript validation, and web-plugin asset serving);
- * it performs no server-side deployment. Hosting the browser client on this
- * engine is a separate, optional extension — see
- * {@link WebClientDeployServicePlugin}.</p>
+ * <p>Web Support ships the engine-side APIs the web administrator needs. The
+ * companion {@link WebClientDeployServicePlugin} in this same extension installs
+ * the bundled browser client into the engine's web server.</p>
  */
 public class WebSupportServicePlugin implements ServicePlugin {
 

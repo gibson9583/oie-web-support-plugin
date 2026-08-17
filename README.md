@@ -1,37 +1,30 @@
 # OIE Web Support
 
-Engine-side REST endpoints that back the [OIE web administrator](https://github.com/gibson9583/oie-web-client) —
-shipped as a standard extension so the engine itself needs **no changes**. Each
-release also ships a companion **OIE Web Client** extension that deploys the
-browser administrator into the engine, for administrators who want it hosted
-there rather than run from source or Docker.
+The complete [OIE web administrator](https://github.com/gibson9583/oie-web-client),
+shipped as one standard extension so the engine itself needs **no changes**. It
+installs both the browser client and the engine-side APIs used for message trees,
+JavaScript validation, and extension-provided web UIs.
 
-## Two extensions, installed independently
+## One extension
 
-Each release ships two separate extensions — install either or both:
+Each release has one artifact:
 
-| Extension (id) | Artifact | What it does |
+| Extension | Artifact | What it does |
 |---|---|---|
-| **Web Support** (`websupport`) | `websupport-<version>.zip` | The engine-side REST APIs the web administrator uses — message-tree serialization, JavaScript validation, and plugin-UI serving. No UI. |
-| **OIE Web Client** (`oie-webadmin`) | `websupport-web-client-<version>.zip` | Deploys the browser administrator into this OIE server's embedded Jetty (served at `/oie-web-client/`). Carries `oie-web-client.war`. |
+| **Web Support** (`websupport`) | `websupport-<version>.zip` | Installs the supporting APIs and deploys `oie-webadmin.war` into this OIE server's embedded Jetty, served at `/oie-webadmin/`. |
 
-They are distinct extensions with distinct `plugin.xml` paths, so the Community
-Store tracks and updates them independently. Install through the Swing
-Administrator (or the web client's Extensions page when one is already
-available), then restart OIE.
+Install it through the Swing Administrator (or the web client's Extensions page
+when one is already available), then restart OIE. The service plugin copies
+`oie-webadmin.war` to `<OIE_HOME>/webapps/` before Jetty scans web applications.
+Open `https://<host>:8443/oie-webadmin/` after the restart.
 
-- **Just the APIs** (you run the client from source, Docker, or a separately
-  managed WAR): install **Web Support**.
-- **Engine-hosted client**: install **OIE Web Client**. Its service plugin copies
-  `oie-web-client.war` to `<OIE_HOME>/webapps/` before Jetty scans web
-  applications. Open `https://<host>:8443/oie-web-client/` after the restart.
-- **Both** (a fresh engine that should host the client with full functionality):
-  install both, then restart once.
+The same client can still be run with Node.js or Docker. Installing Web Support
+also makes the embedded copy available; it does not prevent those deployment
+models.
 
-Uninstalling **OIE Web Client** removes its deployed WAR on the next engine
-restart (the restart that finalizes the uninstall). If the engine is force-killed
-while an uninstall is pending, delete `<OIE_HOME>/webapps/oie-web-client.war` by
-hand.
+Uninstalling **Web Support** removes its deployed WAR on the next engine restart
+(the restart that finalizes the uninstall). If the engine is force-killed while
+an uninstall is pending, delete `<OIE_HOME>/webapps/oie-webadmin.war` by hand.
 
 ## What it provides
 
@@ -55,8 +48,7 @@ neither is present.
 This plugin is the one piece that cannot install itself through the Community
 Store, because the store's own UI is served *by* it. The bootstrap order:
 
-1. Download the extension ZIP(s) you want from [Releases](../../releases) — see
-   the two extensions above.
+1. Download `websupport-<version>.zip` from [Releases](../../releases).
 2. In the web administrator: **Extensions → Install** (extension install uses only
    the engine's core REST API, so it works without this plugin). The classic Swing
    Administrator works too.
@@ -67,13 +59,8 @@ updates itself through the store like any other extension.
 
 ## Build
 
-Requires an OIE/Mirth Connect installation (or built engine tree) for the engine jars:
-
-```bash
-OIE_HOME=/path/to/oie mvn package     # -> target/websupport-<version>.zip
-```
-
-To also build the **OIE Web Client** extension, build the web-client WAR and pass it to Maven:
+Requires an OIE/Mirth Connect installation (or built engine tree) for the engine
+jars and a built web-client WAR. The WAR is mandatory:
 
 ```bash
 cd ../oie-web-client
@@ -82,16 +69,17 @@ npm run build:war
 
 cd ../oie-web-support-plugin
 OIE_HOME=/path/to/oie mvn package \
-  -Dwebclient.war=../oie-web-client/web-administrator/dist/oie-web-client.war
+  -Dwebclient.war=../oie-web-client/web-administrator/dist/oie-webadmin.war
 
 # target/websupport-<version>.zip
-# target/websupport-web-client-<version>.zip
 ```
 
-The release workflow performs that cross-repository build automatically. It
-bundles the web-client commit pinned in [`web-client.ref`](web-client.ref) so
-releases are reproducible; override it per-run with the `WEB_CLIENT_REF`
-repository variable (a web-client tag or full commit SHA).
+The web-client release workflow publishes `oie-webadmin.war`. The Web Support
+release workflow downloads the release selected by `webclient.version` in
+`pom.xml`, validates it, and records the exact client tag and SHA-256 in its
+release notes. Keep that property equal to the Web Support version while the
+release lines match, or change it when the projects version independently. There
+is no source checkout, arbitrary commit ref, or repository variable to maintain.
 
 ## Notes
 
@@ -103,9 +91,9 @@ repository variable (a web-client tag or full commit SHA).
   `.js`/`.mjs` so ES modules always execute.
 - File serving is confined to each extension's `webadmin/` folder (canonicalized
   path containment; traversal and symlink escapes are rejected).
-- The OIE Web Client extension installs its WAR with a staged file and atomic
-  replacement where supported; a read-only `webapps/` directory prevents the WAR
-  deployment but never affects the Web Support APIs (a separate extension).
+- Web Support installs its WAR with a staged file and atomic replacement where
+  supported. A read-only `webapps/` directory prevents WAR deployment; the APIs
+  still load so the engine can start and the copy failure is logged.
 
 ## License
 

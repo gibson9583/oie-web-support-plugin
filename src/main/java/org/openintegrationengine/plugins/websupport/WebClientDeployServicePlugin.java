@@ -25,13 +25,10 @@ import com.mirth.connect.server.controllers.ControllerFactory;
 import com.mirth.connect.server.controllers.ExtensionController;
 
 /**
- * Deploys the OIE web-client WAR carried by this extension into the hosting engine.
+ * Deploys the OIE web-administrator WAR carried by Web Support into the engine.
  *
- * <p>This is a standalone extension ({@value #EXTENSION_NAME}), independent of the
- * Web Support APIs: install it to have the engine host the browser administrator,
- * install {@code websupport} for message trees and JavaScript validation, or install
- * both. Because it may be installed without {@code websupport}, it ships its own copy
- * of this class rather than relying on the Web Support shared library.</p>
+ * <p>The WAR and its supporting APIs are one extension. Installing Web Support
+ * always installs both; uninstalling it removes the deployed WAR.</p>
  *
  * <p>OIE initializes service plugins before its embedded Jetty scans
  * {@code <OIE_HOME>/webapps}, so copying during {@link #init(Properties)} makes the
@@ -48,11 +45,10 @@ import com.mirth.connect.server.controllers.ExtensionController;
  */
 public class WebClientDeployServicePlugin implements ServicePlugin {
 
-    /** Must match the {@code <name>} in this extension's plugin.xml. */
-    static final String PLUGIN_POINT = "OIE Web Client";
+    static final String PLUGIN_POINT = "OIE Web Administrator Deployment";
     /** This extension's install-directory name (its plugin.xml {@code path}). */
-    static final String EXTENSION_NAME = "oie-webadmin";
-    static final String WAR_NAME = "oie-web-client.war";
+    static final String EXTENSION_NAME = "websupport";
+    static final String WAR_NAME = "oie-webadmin.war";
     private static final Logger LOGGER = LogManager.getLogger(WebClientDeployServicePlugin.class);
 
     // Captured at init() so stop() need not reach for controllers during shutdown.
@@ -69,7 +65,7 @@ public class WebClientDeployServicePlugin implements ServicePlugin {
 
         try {
             if (installBundledWar(extensionDirectory, oieHome)) {
-                LOGGER.info("Installed bundled OIE web client at {}",
+                LOGGER.info("Installed bundled OIE web administrator at {}",
                         oieHome.resolve("webapps").resolve(WAR_NAME));
             } else {
                 // The WAR is part of this extension's package; its absence means a
@@ -78,7 +74,7 @@ public class WebClientDeployServicePlugin implements ServicePlugin {
             }
         } catch (IOException e) {
             // Never let a failed webapp copy stop the engine from starting.
-            LOGGER.error("Could not install the bundled OIE web-client WAR", e);
+            LOGGER.error("Could not install the bundled OIE web-administrator WAR", e);
         }
     }
 
@@ -100,7 +96,7 @@ public class WebClientDeployServicePlugin implements ServicePlugin {
             return true;
         }
 
-        Path staged = Files.createTempFile(webapps, "oie-web-client-", ".war.tmp");
+        Path staged = Files.createTempFile(webapps, "oie-webadmin-", ".war.tmp");
         try {
             Files.copy(source, staged, StandardCopyOption.REPLACE_EXISTING);
             try {
@@ -180,7 +176,7 @@ public class WebClientDeployServicePlugin implements ServicePlugin {
         Path war = home.resolve("webapps").resolve(WAR_NAME);
         try {
             if (removeDeployedWarIfUninstalling(extensions, home)) {
-                LOGGER.info("Removed {} on uninstall of the OIE Web Client extension", war);
+                LOGGER.info("Removed {} on uninstall of Web Support", war);
             }
         } catch (IOException e) {
             LOGGER.error("Could not remove {} while uninstalling; delete it manually", war, e);
