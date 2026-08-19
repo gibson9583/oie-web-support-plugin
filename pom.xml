@@ -6,7 +6,7 @@
 
     <groupId>org.openintegrationengine.plugins</groupId>
     <artifactId>websupport</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>OIE Web Support</name>
@@ -19,7 +19,7 @@
         <!-- GitHub Release version of oie-webadmin.war bundled by release.yml.
              Keep this equal to the plugin version when the release lines match;
              set it independently when the web client and plugin diverge. -->
-        <webclient.version>0.6.0</webclient.version>
+        <webclient.version>0.7.0</webclient.version>
         <!-- Point at an OIE installation (or a built engine tree) that provides the engine jars. -->
         <oie.home>${env.OIE_HOME}</oie.home>
     </properties>
