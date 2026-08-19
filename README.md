@@ -74,6 +74,26 @@ OIE_HOME=/path/to/oie mvn package \
 # target/websupport-<version>.zip
 ```
 
+### Signed build (YubiKey)
+
+Requires a YubiKey holding a code-signing certificate and the OpenSC PKCS#11
+library. One-time setup: copy `yubikey-pkcs11.cfg.example` to
+`yubikey-pkcs11.cfg` and adjust the library path for your system, and place your
+certificate chain in `certchain.pem` at the repo root (both files stay
+untracked).
+
+```bash
+OIE_HOME=/path/to/oie mvn clean package -Psigning \
+  -Dsigning.storepass=<yubikey-pin> \
+  -Dwebclient.war=/path/to/oie-webadmin.war
+```
+
+Omit `-Dsigning.storepass` to read the PIN from the `YUBIKEY_PIN` environment
+variable instead. Only `websupport-shared.jar` is signed; the WAR is left
+byte-identical to the web client's published release asset so the release
+workflow's digest check still holds. Verify with
+`jarsigner -verify target/websupport-shared.jar`.
+
 The web-client release workflow publishes `oie-webadmin.war`. The Web Support
 release workflow downloads the release selected by `webclient.version` in
 `pom.xml`, validates it, and records the exact client tag and SHA-256 in its
