@@ -22,7 +22,29 @@
         <webclient.version>0.7.0</webclient.version>
         <!-- Point at an OIE installation (or a built engine tree) that provides the engine jars. -->
         <oie.home>${env.OIE_HOME}</oie.home>
+        <!-- Jar signing is off by default; the signing profile enables it. -->
+        <signing.skip>true</signing.skip>
     </properties>
+
+    <profiles>
+        <!-- Signs websupport-shared.jar with a YubiKey-held code-signing certificate
+             via PKCS#11. The WAR is deliberately left unsigned: release.yml verifies
+             it byte-identical to the web client's published release asset. -->
+        <profile>
+            <id>signing</id>
+            <properties>
+                <signing.skip>false</signing.skip>
+                <signing.keystore>NONE</signing.keystore>
+                <signing.storetype>PKCS11</signing.storetype>
+                <signing.providerClass>sun.security.pkcs11.SunPKCS11</signing.providerClass>
+                <signing.providerArg>${user.dir}/yubikey-pkcs11.cfg</signing.providerArg>
+                <signing.alias>Certificate for PIV Authentication</signing.alias>
+                <signing.storepass>${env.YUBIKEY_PIN}</signing.storepass>
+                <signing.certchain>${user.dir}/certchain.pem</signing.certchain>
+                <signing.tsa>http://timestamp.digicert.com</signing.tsa>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <!-- Engine jars: provided by the running engine, sourced from an install for compilation. -->
@@ -94,6 +116,34 @@
     <build>
         <finalName>websupport-shared</finalName>
         <plugins>
+            <!-- Sign websupport-shared.jar before the assembly zips it. Declared ahead
+                 of the assembly plugin so it runs first within the package phase. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>sign</id>
+                        <phase>package</phase>
+                        <goals><goal>sign</goal></goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>${signing.skip}</skip>
+                    <keystore>${signing.keystore}</keystore>
+                    <storetype>${signing.storetype}</storetype>
+                    <providerClass>${signing.providerClass}</providerClass>
+                    <providerArg>${signing.providerArg}</providerArg>
+                    <alias>${signing.alias}</alias>
+                    <storepass>${signing.storepass}</storepass>
+                    <tsa>${signing.tsa}</tsa>
+                    <arguments>
+                        <argument>-certchain</argument>
+                        <argument>${signing.certchain}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
             <!-- Assemble one installable extension containing the APIs and WAR. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

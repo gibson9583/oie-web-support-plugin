@@ -1,1 +1,3 @@
 target/
+yubikey-pkcs11.cfg
+certchain.pem
