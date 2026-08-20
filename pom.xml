@@ -51,14 +51,14 @@
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>mirth-server</artifactId>
-            <version>4.6.0</version>
+            <version>4.5.2</version>
             <scope>system</scope>
             <systemPath>${oie.home}/server-lib/mirth-server.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>mirth-client-core</artifactId>
-            <version>4.6.0</version>
+            <version>4.5.2</version>
             <scope>system</scope>
             <systemPath>${oie.home}/server-lib/mirth-client-core.jar</systemPath>
         </dependency>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>donkey-model</artifactId>
-            <version>4.6.0</version>
+            <version>4.5.2</version>
             <scope>system</scope>
             <systemPath>${oie.home}/server-lib/donkey/donkey-model.jar</systemPath>
         </dependency>
@@ -153,7 +153,7 @@
                     <descriptors>
                         <descriptor>src/main/assembly/extension-zip.xml</descriptor>
                     </descriptors>
-                    <finalName>websupport-${project.version}</finalName>
+                    <finalName>websupport-${project.version}-oie4.5.2</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>

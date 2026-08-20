@@ -2,7 +2,7 @@
 	<name>Web Support</name>
 	<author>Chris Gibson</author>
 	<pluginVersion>1.0.1</pluginVersion>
-	<mirthVersion>4.6.0</mirthVersion>
+	<mirthVersion>4.5.2</mirthVersion>
 	<url>https://openintegrationengine.org</url>
 	<description>Installs the embedded OIE web administrator and its supporting REST endpoints: byte-exact message serialization, server-side JavaScript validation, and installed extensions' web UIs.</description>
 	<serverClasses>
