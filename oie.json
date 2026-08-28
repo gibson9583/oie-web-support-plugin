@@ -5,7 +5,7 @@
     "description": "Installs the OIE web administrator in the engine's embedded web server together with byte-exact message serialization, JavaScript validation, and web plugin UI serving.",
     "type": "plugin",
     "ui": [],
-    "version": "1.0.1",
+    "version": "1.0.2",
     "minEngineVersion": "4.5.2",
     "maxEngineVersion": "4.5.2",
     "filename": "websupport-{version}-oie4.5.2.zip",
