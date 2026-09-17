@@ -11,7 +11,11 @@ permissions:
   contents: write
 
 jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+
   release:
+    needs: validate
     runs-on: ubuntu-latest
     env:
       ENGINE_REPOSITORY: OpenIntegrationEngine/engine
@@ -19,10 +23,10 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout Web Support
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
           java-version: '17'
@@ -54,7 +58,10 @@ jobs:
           ENGINE_ASSET="oie_unix_${ENGINE_VERSION//./_}.tar.gz"
           mkdir -p engine-dist engine-home
           gh release download "v${ENGINE_VERSION}" -R "$ENGINE_REPOSITORY" -p "$ENGINE_ASSET" -D engine-dist
-          tar -xzf "engine-dist/$ENGINE_ASSET" -C engine-home
+          echo "7c82e79027e671277e1d78d0f7bbb1c53ddf1be476f1e80c2ddbfcf7855900ea  engine-dist/$ENGINE_ASSET" | sha256sum -c -
+          tar -xzf "engine-dist/$ENGINE_ASSET" -C engine-home \
+            oie/server-lib/mirth-server.jar oie/server-lib/mirth-client-core.jar \
+            oie/server-lib/donkey/donkey-model.jar
           SERVER_LIB="$(find "$GITHUB_WORKSPACE/engine-home" -type d -name server-lib -print -quit)"
           if [ -z "$SERVER_LIB" ]; then
             echo "::error::The OIE distribution contains no server-lib directory"
@@ -68,7 +75,12 @@ jobs:
           WEB_CLIENT_TAG="v${{ steps.versions.outputs.web_client_version }}"
           mkdir -p web-client-release
           gh release download "$WEB_CLIENT_TAG" -R "$WEB_CLIENT_REPOSITORY" \
-            -p oie-webadmin.war -D web-client-release
+            -p oie-webadmin.war -p oie-webadmin.war.sha256 -p release-receipt.json -D web-client-release
+          (cd web-client-release && sha256sum -c oie-webadmin.war.sha256)
+          WEB_CLIENT_SHA="$(gh api "repos/$WEB_CLIENT_REPOSITORY/commits/$WEB_CLIENT_TAG" --jq .sha)"
+          test "$(jq -r .sourceSha web-client-release/release-receipt.json)" = "$WEB_CLIENT_SHA"
+          test "v$(jq -r .version web-client-release/release-receipt.json)" = "$WEB_CLIENT_TAG"
+          test "$(jq -r '.artifacts["oie-webadmin.war"]' web-client-release/release-receipt.json)" = "$(sha256sum web-client-release/oie-webadmin.war | cut -d' ' -f1)"
           WEB_CLIENT_SHA256="$(sha256sum web-client-release/oie-webadmin.war | cut -d' ' -f1)"
           jar --list --file web-client-release/oie-webadmin.war | grep -qx 'index.jsp'
           jar --list --file web-client-release/oie-webadmin.war | grep -qx 'WEB-INF/web.xml'
@@ -97,7 +109,7 @@ jobs:
           echo "package=$(basename "$PACKAGE")" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
             out/${{ steps.assets.outputs.package }}
