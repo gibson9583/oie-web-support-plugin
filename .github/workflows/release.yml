@@ -15,6 +15,10 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
     needs: validate
     runs-on: ubuntu-latest
     env:
@@ -31,6 +35,15 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+
+      - name: Check SSL.com signing configuration
+        env:
+          SSL_COM_USERNAME: ${{ secrets.SSL_COM_USERNAME }}
+          SSL_COM_PASSWORD: ${{ secrets.SSL_COM_PASSWORD }}
+          SSL_COM_CREDENTIAL_ID: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
+          SSL_COM_TOTP_SECRET: ${{ secrets.SSL_COM_TOTP_SECRET }}
+          SSL_COM_CERT_SHA256: ${{ vars.SSL_COM_CERT_SHA256 }}
+        run: python3 .github/signing/sign_release.py --check-config
 
       - name: Resolve and verify versions
         id: versions
@@ -91,6 +104,15 @@ jobs:
         run: |
           mvn -B -ntp package \
             -Dwebclient.war="$GITHUB_WORKSPACE/web-client-release/oie-webadmin.war"
+
+      - name: Sign and verify release JARs with SSL.com
+        env:
+          SSL_COM_USERNAME: ${{ secrets.SSL_COM_USERNAME }}
+          SSL_COM_PASSWORD: ${{ secrets.SSL_COM_PASSWORD }}
+          SSL_COM_CREDENTIAL_ID: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
+          SSL_COM_TOTP_SECRET: ${{ secrets.SSL_COM_TOTP_SECRET }}
+          SSL_COM_CERT_SHA256: ${{ vars.SSL_COM_CERT_SHA256 }}
+        run: python3 .github/signing/sign_release.py
 
       - name: Validate and stage release assets
         id: assets
