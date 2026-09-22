@@ -1,0 +1,6 @@
+{
+  "bundle": "target/websupport-*.zip",
+  "jars": [
+    "websupport/websupport-shared.jar"
+  ]
+}

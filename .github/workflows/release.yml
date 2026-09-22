@@ -15,6 +15,10 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
     needs: validate
     runs-on: ubuntu-latest
     env:
@@ -25,12 +29,34 @@ jobs:
       - name: Checkout Web Support
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      - name: Set up JDK 11 for CodeSignTool
+        id: codesign-java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
       - name: Set up JDK 17
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
           java-version: '17'
           cache: maven
+
+      - name: Check CodeSignTool JAR compatibility without credentials
+        env:
+          CODESIGNTOOL_JAVA: ${{ steps.codesign-java.outputs.path }}/bin/java
+        run: python3 .github/signing/sign_release.py --check-tool
+
+      - name: Check SSL.com signing configuration
+        env:
+          CODESIGNTOOL_JAVA: ${{ steps.codesign-java.outputs.path }}/bin/java
+          SSL_COM_USERNAME: ${{ secrets.SSL_COM_USERNAME }}
+          SSL_COM_PASSWORD: ${{ secrets.SSL_COM_PASSWORD }}
+          SSL_COM_CREDENTIAL_ID: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
+          SSL_COM_TOTP_SECRET: ${{ secrets.SSL_COM_TOTP_SECRET }}
+          SSL_COM_CERT_SHA256: ${{ vars.SSL_COM_CERT_SHA256 }}
+        run: python3 .github/signing/sign_release.py --check-config
 
       - name: Resolve and verify versions
         id: versions
@@ -91,6 +117,16 @@ jobs:
         run: |
           mvn -B -ntp package \
             -Dwebclient.war="$GITHUB_WORKSPACE/web-client-release/oie-webadmin.war"
+
+      - name: Sign and verify release JARs with SSL.com
+        env:
+          CODESIGNTOOL_JAVA: ${{ steps.codesign-java.outputs.path }}/bin/java
+          SSL_COM_USERNAME: ${{ secrets.SSL_COM_USERNAME }}
+          SSL_COM_PASSWORD: ${{ secrets.SSL_COM_PASSWORD }}
+          SSL_COM_CREDENTIAL_ID: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
+          SSL_COM_TOTP_SECRET: ${{ secrets.SSL_COM_TOTP_SECRET }}
+          SSL_COM_CERT_SHA256: ${{ vars.SSL_COM_CERT_SHA256 }}
+        run: python3 .github/signing/sign_release.py
 
       - name: Validate and stage release assets
         id: assets
