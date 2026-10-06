@@ -43,6 +43,40 @@ first (an engine built with them), then this plugin — and degrades gracefully
 (no message trees, no server-side validation, no engine-served plugin UIs) when
 neither is present.
 
+## Vocabulary descriptions from datatype extensions
+
+Swing obtains message-tree descriptions from each datatype's `getVocabulary()`.
+To expose the same vocabulary on the server, an enabled extension can declare it
+in its existing `webadmin/plugin.json`:
+
+```json
+{
+  "id": "datatype-edifact",
+  "vocabularies": {
+    "EDIFACT": "com.mirth.connect.plugins.datatypes.edifact.EDIFACTVocabulary"
+  }
+}
+```
+
+Merge `vocabularies` into the existing manifest; retain its other fields. Each
+key must match the installed datatype's plugin point name. Each class must be a
+`MessageVocabulary` subclass in the engine's SHARED libraries with a public
+`(String version, String type)` constructor and a matching `getDataType()`.
+The constructor receives that message's serializer metadata, as in Swing.
+No Swing client plugin is instantiated on the server.
+
+The existing HL7 v2, X12, NCPDP and DICOM mappings remain authoritative. Extension
+discovery includes only engine-enabled extensions; a manifest with
+`"enabled": false` contributes no vocabulary. Missing, invalid, unavailable or
+conflicting declarations fall back to bare labels without preventing message
+serialization. Manifests are read on each request and vocabulary instances are
+never shared, so changes in enabled discovery or declarations do not leave stale
+results. Installing updated SHARED libraries still requires the engine's normal
+restart. An extension without this declaration keeps its existing behavior.
+
+This uses the existing serialization endpoint and response shape; no client API
+version change is required.
+
 ## Install — do this first
 
 This plugin is the one piece that cannot install itself through the Community
@@ -103,9 +137,8 @@ is no source checkout, arbitrary commit ref, or repository variable to maintain.
 
 ## Notes
 
-- The vocabulary descriptions (HL7 v2, X12, NCPDP, DICOM) are resolved from the
-  engine's own datatype classes by name at runtime — no compile-time coupling, and
-  a data type that isn't installed simply contributes no descriptions.
+- Vocabulary descriptions use built-in mappings or enabled extensions' manifest
+  declarations, loading SHARED classes at runtime without compile-time coupling.
 - Static assets are served with the servlet container's MIME table
   (`ServletContext.getMimeType`), with `text/javascript; charset=utf-8` pinned for
   `.js`/`.mjs` so ES modules always execute.

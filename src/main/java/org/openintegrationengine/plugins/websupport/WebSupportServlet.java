@@ -63,20 +63,6 @@ public class WebSupportServlet extends MirthServlet implements WebSupportServlet
     // both discovery and asset serving against traversal via the extension name.
     private static final Pattern SAFE_SEGMENT = Pattern.compile("[A-Za-z0-9._-]+");
 
-    /**
-     * Data type name -> vocabulary class (element descriptions, the same text the Swing message
-     * tree shows). Upstream this is a {@code DataTypeServerPlugin.getVocabulary()} override in
-     * each data type; as a plugin we cannot add to that interface, so the built-in vocabularies
-     * are resolved by name instead. Reflection keeps this compilable without the datatype plugin
-     * jars; at runtime the engine loads every extension's SHARED libraries onto one classpath,
-     * so the classes are present whenever the data type itself is installed.
-     */
-    private static final Map<String, String> VOCABULARY_CLASSES = Map.of(
-            "HL7V2", "com.mirth.connect.plugins.datatypes.hl7v2.HL7v2Vocabulary",
-            "EDI/X12", "com.mirth.connect.plugins.datatypes.edi.X12Vocabulary",
-            "NCPDP", "com.mirth.connect.plugins.datatypes.ncpdp.NCPDPVocabulary",
-            "DICOM", "com.mirth.connect.plugins.datatypes.dicom.DICOMVocabulary");
-
     private final ServletContext servletContext;
 
     public WebSupportServlet(@Context HttpServletRequest request, @Context ServletContext servletContext, @Context SecurityContext sc) {
@@ -114,7 +100,9 @@ public class WebSupportServlet extends MirthServlet implements WebSupportServlet
             // vocabulary (element descriptions) — the same text the Swing tree shows. Only the
             // XML-serialized types decorate nodes; JSON is a plain object tree.
             String[] tv = typeAndVersion(serializer, msg);
-            MessageVocabulary vocab = vocabularyFor(dataType, tv[1], tv[0]);
+            MessageVocabulary vocab = MessageVocabularyResolver.resolve(dataType, tv[1], tv[0],
+                    new File(ExtensionController.getExtensionsPath()).toPath(), this::getWebPluginPaths,
+                    plugin.getClass().getClassLoader());
             String root = buildRoot(tv[0], tv[1], vocab);
 
             ObjectNode out = MAPPER.createObjectNode();
@@ -128,20 +116,6 @@ public class WebSupportServlet extends MirthServlet implements WebSupportServlet
             throw e;
         } catch (Exception e) {
             throw new MirthApiException(e);
-        }
-    }
-
-    /** Resolves the vocabulary for a data type by class name; null when it has none or isn't installed. */
-    private static MessageVocabulary vocabularyFor(String dataType, String version, String type) {
-        String className = VOCABULARY_CLASSES.get(dataType);
-        if (className == null) {
-            return null;
-        }
-        try {
-            return (MessageVocabulary) Class.forName(className)
-                    .getConstructor(String.class, String.class).newInstance(version, type);
-        } catch (Throwable t) {
-            return null;
         }
     }
 
@@ -225,7 +199,7 @@ public class WebSupportServlet extends MirthServlet implements WebSupportServlet
         try {
             String r = vocab.getDescription(elementId);
             return r == null ? "" : r;
-        } catch (Exception e) {
+        } catch (Exception | LinkageError e) {
             return "";
         }
     }
