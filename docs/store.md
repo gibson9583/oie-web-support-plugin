@@ -10,7 +10,8 @@ serving of installed extensions' web UIs. No engine changes required.
 One install provides the browser administrator at `/oie-webadmin/` and enables:
 
 - **Message trees** in the channel editor (byte-exact serialization + element
-  descriptions for HL7 v2, X12, NCPDP, DICOM)
+  descriptions for HL7 v2, X12, NCPDP, DICOM and extension datatypes that declare
+  their SHARED vocabulary in `webadmin/plugin.json`)
 - **Validate Script** (the engine's real Rhino compiler, matching runtime behavior)
 - **Plugin UIs served by the engine** — including this store's own interface
 
