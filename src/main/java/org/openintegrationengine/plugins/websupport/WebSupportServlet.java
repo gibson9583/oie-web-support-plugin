@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mirth.connect.client.core.api.MirthApiException;
 import com.mirth.connect.donkey.model.message.SerializationType;
+import com.mirth.connect.model.FilterTransformerElement;
 import com.mirth.connect.model.MetaData;
 import com.mirth.connect.model.converters.IMessageSerializer;
 import com.mirth.connect.model.datatype.DataTypeProperties;
@@ -270,6 +271,21 @@ public class WebSupportServlet extends MirthServlet implements WebSupportServlet
             out.put("error", error);
         }
         return Response.ok(out.toString()).type(MediaType.APPLICATION_JSON).build();
+    }
+
+    @Override
+    public Response getElementResponseVariables(List<FilterTransformerElement> elements) {
+        if (elements == null || ((List<?>) elements).stream().anyMatch(e -> !(e instanceof FilterTransformerElement))) {
+            throw new MirthApiException(Status.BAD_REQUEST);
+        }
+        try {
+            ObjectNode out = MAPPER.createObjectNode();
+            out.set("responseVariables", MAPPER.valueToTree(ResponseVariables.discover(elements)));
+            return Response.ok(out.toString()).type(MediaType.APPLICATION_JSON).build();
+        } catch (Exception e) {
+            // A failed provider must not look like successful, complete discovery.
+            throw new MirthApiException(e);
+        }
     }
 
     /* ---- web plugins: discovery + static serving ---------------------------------------- */

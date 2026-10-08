@@ -35,6 +35,7 @@ authenticated session:
 |---|---|
 | `POST /datatypes/_serialize?dataType=&props=` | Serializes a message through the engine's **own data type serializers** — output byte-identical to the runtime `msg`/`tmp` — plus the data type's vocabulary descriptions for message-tree annotation. |
 | `POST /javascript/_validate` | Compiles a script with the engine's **Rhino**, returning `{ error: string\|null }` — validation that matches runtime compilation exactly. |
+| `POST /elements/_responseVariables` | Calls installed rules' and steps' `getResponseVariables()` against the supplied unsaved settings, returning `{ responseVariables: string[] }`. |
 | `GET /webplugins` | Lists installed, enabled extensions that ship a web UI half (`webadmin/plugin.json`). |
 | `GET /webplugins/{extension}/{path}` | Serves a static file from an extension's `webadmin/` folder, so a plugin's browser UI follows the engine it is installed on. |
 
@@ -42,6 +43,15 @@ The web administrator probes for these endpoints at session start — engine-nat
 first (an engine built with them), then this plugin — and degrades gracefully
 (no message trees, no server-side validation, no engine-served plugin UIs) when
 neither is present.
+
+Response-variable discovery accepts the engine's XML list or equivalent class-keyed
+JSON (`{"list":{"your.plugin.CustomStep":{"@version":"4.6.0", ...}}}`).
+The caller supplies enabled source elements and all destination elements, matching
+Swing's inclusion rules. Empty lists and providers returning no variables are valid;
+invalid elements or a failing provider fail the request rather than return incomplete
+results. No channel is saved and no generated JavaScript is evaluated. This endpoint
+requires an updated Web Support plugin; clients must handle its absence separately
+from a successful empty result.
 
 ## Vocabulary descriptions from datatype extensions
 
