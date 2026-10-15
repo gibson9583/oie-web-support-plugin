@@ -22,6 +22,7 @@ import com.mirth.connect.client.core.ClientException;
 import com.mirth.connect.client.core.api.BaseServletInterface;
 import com.mirth.connect.client.core.api.MirthOperation;
 import com.mirth.connect.client.core.api.Param;
+import com.mirth.connect.model.FilterTransformerElement;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * The engine-side endpoints the web administrator needs beyond the core REST API, shipped as a
- * plugin so the engine itself requires no changes. Three capabilities:
+ * plugin so the engine itself requires no changes. Four capabilities:
  *
  * 1) Message serialization through the engine's own data type serializers — the exact
  *    toXML()/toJSON() the runtime produces — so a browser can build message trees identical to
@@ -37,6 +38,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * 2) Server-side JavaScript validation with the engine's Rhino, matching runtime compilation.
  * 3) Discovery and static serving of installed extensions' web UI halves ({@code webadmin/}
  *    folders), so a plugin's browser UI follows the engine it is installed on.
+ * 4) Response-variable discovery using installed filter/transformer element models.
  *
  * All operations require only a valid session (any authenticated user) and are not audited:
  * they are read-only helpers hit continuously while editing.
@@ -69,6 +71,13 @@ public interface WebSupportServletInterface extends BaseServletInterface {
     @Operation(summary = "Validates (compiles) a JavaScript script with the engine's Rhino. Returns { error: string|null }.")
     @MirthOperation(name = "validateScript", display = "Validate JavaScript", auditable = false)
     public Response validateScript(@Param("script") String script) throws ClientException;
+
+    @POST
+    @Path("/elements/_responseVariables")
+    @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+    @Operation(summary = "Discovers response variables from the supplied, unsaved filter rules and transformer steps using their installed Java implementations. Returns { responseVariables: string[] }.")
+    @MirthOperation(name = "getElementResponseVariables", display = "Get element response variables", auditable = false)
+    public Response getElementResponseVariables(@Param("elements") List<FilterTransformerElement> elements) throws ClientException;
 
     @GET
     @Path("/webplugins")

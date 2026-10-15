@@ -6,7 +6,7 @@
 
     <groupId>org.openintegrationengine.plugins</groupId>
     <artifactId>websupport</artifactId>
-    <version>1.0.5</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <name>OIE Web Support</name>
@@ -19,7 +19,7 @@
         <!-- GitHub Release version of oie-webadmin.war bundled by release.yml.
              Keep this equal to the plugin version when the release lines match;
              set it independently when the web client and plugin diverge. -->
-        <webclient.version>1.0.1</webclient.version>
+        <webclient.version>1.1.0</webclient.version>
         <!-- Point at an OIE installation (or a built engine tree) that provides the engine jars. -->
         <oie.home>${env.OIE_HOME}</oie.home>
         <!-- Jar signing is off by default; the signing profile enables it. -->
@@ -109,6 +109,49 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Exercise the engine's real JSON/XStream request readers without booting it. -->
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.20</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>xpp3</groupId>
+            <artifactId>xpp3</artifactId>
+            <version>1.1.4c</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.odysseus.staxon</groupId>
+            <artifactId>staxon</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.21.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.20.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mozilla</groupId>
+            <artifactId>rhino</artifactId>
+            <version>1.7.13</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
