@@ -13,6 +13,8 @@ One install provides the browser administrator at `/oie-webadmin/` and enables:
   descriptions for HL7 v2, X12, NCPDP, DICOM and extension datatypes that declare
   their SHARED vocabulary in `webadmin/plugin.json`)
 - **Validate Script** (the engine's real Rhino compiler, matching runtime behavior)
+- **Response-variable discovery** from installed filter rules and transformer steps,
+  including their unsaved settings
 - **Plugin UIs served by the engine** — including this store's own interface
 
 ## The bootstrap note

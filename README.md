@@ -46,6 +46,8 @@ neither is present.
 
 Response-variable discovery accepts the engine's XML list or equivalent class-keyed
 JSON (`{"list":{"your.plugin.CustomStep":{"@version":"4.6.0", ...}}}`).
+Send complete engine element records, including `sequenceNumber` for each element;
+the engine sorts multi-element lists by that field during deserialization.
 The caller supplies enabled source elements and all destination elements, matching
 Swing's inclusion rules. Empty lists and providers returning no variables are valid;
 invalid elements or a failing provider fail the request rather than return incomplete
@@ -144,6 +146,13 @@ release workflow downloads the release selected by `webclient.version` in
 release notes. Keep that property equal to the Web Support version while the
 release lines match, or change it when the projects version independently. There
 is no source checkout, arbitrary commit ref, or repository variable to maintain.
+
+The workflow retains the exact signed ZIP, checksums and source receipt as
+`signed-release-assets`, then uploads them to a draft before publishing it. If
+publication or the catalog update fails, rerun the failed jobs to reuse those
+bytes. Existing assets must match exactly; a rebuild or new signing timestamp
+cannot replace a released package. An empty GitHub `starter` upload needs the
+specific draft-asset cleanup identified by the error before retrying.
 
 ## Notes
 

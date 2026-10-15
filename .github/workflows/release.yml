@@ -10,15 +10,16 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   validate:
     uses: ./.github/workflows/ci.yml
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    concurrency:
-      group: release-${{ github.ref }}
-      cancel-in-progress: false
     needs: validate
     runs-on: ubuntu-latest
     env:
@@ -144,25 +145,42 @@ jobs:
           (cd out && sha256sum *.zip > SHA256SUMS)
           echo "package=$(basename "$PACKAGE")" >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+      - name: Record signed release identity
+        env:
+          WEB_CLIENT_TAG: ${{ steps.webclient.outputs.tag }}
+          WEB_CLIENT_SHA256: ${{ steps.webclient.outputs.sha256 }}
+        run: |
+          python3 .github/release/publish_release.py stage \
+            --tag "$GITHUB_REF_NAME" --source-sha "$GITHUB_SHA" \
+            --client-tag "$WEB_CLIENT_TAG" --war-sha256 "$WEB_CLIENT_SHA256"
+
+      - name: Retain the exact signed assets for publication retries
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          files: |
-            out/${{ steps.assets.outputs.package }}
-            out/SHA256SUMS
-          body: |
-            `${{ steps.assets.outputs.package }}` is the complete Web Support extension:
+          name: signed-release-assets
+          path: out/
+          if-no-files-found: error
+          compression-level: 0
 
-            - engine-side APIs for message trees, JavaScript validation, and plugin UIs
-            - the embedded OIE web administrator, served at `/oie-webadmin/`
-
-            Bundled web client: `${{ env.WEB_CLIENT_REPOSITORY }}@${{ steps.webclient.outputs.tag }}`
-
-            WAR SHA-256: `${{ steps.webclient.outputs.sha256 }}`
-          prerelease: ${{ contains(github.ref_name, '-') }}
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: signed-release-assets
+          path: out
+      - name: Publish the retained signed assets without overwriting
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 .github/release/publish_release.py publish \
+            --tag "$GITHUB_REF_NAME" --source-sha "$GITHUB_SHA" \
+            --repository "$GITHUB_REPOSITORY"
 
   catalog-manifest:
-    needs: release
+    needs: publish
     uses: ./.github/workflows/catalog-pr.yml
     with:
       tag: ${{ github.ref_name }}
