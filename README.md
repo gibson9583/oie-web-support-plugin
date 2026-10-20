@@ -1,5 +1,7 @@
 # OIE Web Support
 
+Release 1.1.1 is being prepared with engine compatibility limited to OIE **4.5.2, 4.6.0, and 4.7.0**. Runtime validation on the final 4.7.0 release is pending; see the [release preparation notes](docs/oie-4.6-4.7-release.md).
+
 The complete [OIE web administrator](https://github.com/gibson9583/oie-web-client),
 shipped as one standard extension so the engine itself needs **no changes**. It
 installs both the browser client and the engine-side APIs used for message trees,

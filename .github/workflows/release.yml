@@ -74,7 +74,8 @@ jobs:
             echo "::error::pom.xml must declare webclient.version"
             exit 1
           fi
-          ENGINE_VERSION="$(jq -r .minEngineVersion oie.json)"
+          ENGINE_VERSION="$(sed -n 's:.*<oie.compile.version>\(.*\)</oie.compile.version>.*:\1:p' pom.xml)"
+          test -n "$ENGINE_VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "engine-version=$ENGINE_VERSION" >> "$GITHUB_OUTPUT"
           echo "web_client_version=$WEB_CLIENT_VERSION" >> "$GITHUB_OUTPUT"
@@ -85,7 +86,7 @@ jobs:
           ENGINE_ASSET="oie_unix_${ENGINE_VERSION//./_}.tar.gz"
           mkdir -p engine-dist engine-home
           gh release download "v${ENGINE_VERSION}" -R "$ENGINE_REPOSITORY" -p "$ENGINE_ASSET" -D engine-dist
-          echo "7c82e79027e671277e1d78d0f7bbb1c53ddf1be476f1e80c2ddbfcf7855900ea  engine-dist/$ENGINE_ASSET" | sha256sum -c -
+          echo "d1923b3f8871f6ccd93e06060cd2695bbeb7496a24c119d36b8beceeb5322e58  engine-dist/$ENGINE_ASSET" | sha256sum -c -
           tar -xzf "engine-dist/$ENGINE_ASSET" -C engine-home \
             oie/server-lib/mirth-server.jar oie/server-lib/mirth-client-core.jar \
             oie/server-lib/donkey/donkey-model.jar

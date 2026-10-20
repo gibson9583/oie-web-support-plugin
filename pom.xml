@@ -6,7 +6,7 @@
 
     <groupId>org.openintegrationengine.plugins</groupId>
     <artifactId>websupport</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>jar</packaging>
 
     <name>OIE Web Support</name>
@@ -16,6 +16,8 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Oldest supported engine; independent of catalog compatibility bounds. -->
+        <oie.compile.version>4.5.2</oie.compile.version>
         <!-- GitHub Release version of oie-webadmin.war bundled by release.yml.
              Keep this equal to the plugin version when the release lines match;
              set it independently when the web client and plugin diverge. -->
@@ -51,14 +53,14 @@
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>mirth-server</artifactId>
-            <version>4.6.0</version>
+            <version>${oie.compile.version}</version>
             <scope>system</scope>
             <systemPath>${oie.home}/server-lib/mirth-server.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>mirth-client-core</artifactId>
-            <version>4.6.0</version>
+            <version>${oie.compile.version}</version>
             <scope>system</scope>
             <systemPath>${oie.home}/server-lib/mirth-client-core.jar</systemPath>
         </dependency>
@@ -66,7 +68,7 @@
         <dependency>
             <groupId>com.mirth.connect</groupId>
             <artifactId>donkey-model</artifactId>
-            <version>4.6.0</version>
+            <version>${oie.compile.version}</version>
             <scope>system</scope>
             <systemPath>${oie.home}/server-lib/donkey/donkey-model.jar</systemPath>
         </dependency>

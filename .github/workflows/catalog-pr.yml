@@ -61,6 +61,7 @@ jobs:
         run: |
           curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/$TAG/oie.json" -o metafile.json
           echo "MIN_ENGINE=$(node -p "JSON.parse(require('fs').readFileSync('metafile.json','utf8')).minEngineVersion")" >> "$GITHUB_ENV"
+          echo "MAX_ENGINE_JSON=$(node -p "JSON.stringify(JSON.parse(require('fs').readFileSync('metafile.json','utf8')).maxEngineVersion ?? null)")" >> "$GITHUB_ENV"
           # Empty when the tagged manifest has no ui field (older tags).
           echo "UI=$(node -p "const ui = JSON.parse(require('fs').readFileSync('metafile.json','utf8')).ui; ui === undefined ? '' : JSON.stringify(ui)")" >> "$GITHUB_ENV"
           echo "STORE_DOCS=$(node -p "JSON.parse(require('fs').readFileSync('metafile.json','utf8')).storeDocs || 'docs/store.md'")" >> "$GITHUB_ENV"
@@ -102,7 +103,7 @@ jobs:
           {
               "version": "${VERSION}",${UI_LINE}
               "minEngineVersion": "${MIN_ENGINE}",
-              "maxEngineVersion": null,
+              "maxEngineVersion": ${MAX_ENGINE_JSON},
               "installerUrl": "https://github.com/${{ github.repository }}/releases/download/${TAG}/websupport-${VERSION}.zip",
               "sha256": "${SHA256}",
               "restartRequired": true,

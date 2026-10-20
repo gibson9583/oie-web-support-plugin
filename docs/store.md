@@ -1,5 +1,7 @@
 # Web Support
 
+Engine compatibility for the prepared 1.1.1 release: **OIE 4.5.2, 4.6.0, and 4.7.0 only**. See the [release preparation notes](oie-4.6-4.7-release.md) for validation status.
+
 Installs the **OIE web administrator** in the engine's embedded web server,
 together with message-tree serialization through the engine's own data type
 serializers, server-side JavaScript validation with the engine's Rhino, and
