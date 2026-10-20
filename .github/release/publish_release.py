@@ -35,7 +35,7 @@ def stage(directory, tag, source_sha, client_tag, war_sha):
                "artifacts": {name: digest(directory / name) for name in [package, "SHA256SUMS"]}}
     (directory / "release-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
     (directory / "release-notes.md").write_text(
-        f"`{package}` is the complete Web Support extension for OIE 4.6.0:\n\n"
+        f"`{package}` is the complete Web Support extension for OIE 4.5.2, 4.6.0, and 4.7.0:\n\n"
         "- engine-side APIs for message trees, JavaScript validation, and plugin UIs\n"
         "- extension datatype vocabulary descriptions and custom response variables\n"
         "- the embedded OIE web administrator, served at `/oie-webadmin/`\n\n"

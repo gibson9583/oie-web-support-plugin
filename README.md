@@ -1,6 +1,6 @@
 # OIE Web Support
 
-Release 1.1.1 is being prepared with engine compatibility limited to OIE **4.5.2, 4.6.0, and 4.7.0**. Runtime validation on the final 4.7.0 release is pending.
+Web Support **1.2.0** is being prepared to bundle Web Client **1.2.0** and support OIE **4.5.2, 4.6.0, and 4.7.0**. Release packaging and full runtime validation on all three engines await the published Client 1.2.0 WAR.
 
 The complete [OIE web administrator](https://github.com/gibson9583/oie-web-client),
 shipped as one standard extension so the engine itself needs **no changes**. It
@@ -107,8 +107,9 @@ updates itself through the store like any other extension.
 
 ## Build
 
-Requires an OIE/Mirth Connect installation (or built engine tree) for the engine
-jars and a built web-client WAR. The WAR is mandatory:
+Compile against stock OIE **4.5.2**, the oldest supported engine, using its
+installation jars. The compile baseline is separate from the supported engine
+versions. A built Web Client **1.2.0** WAR is mandatory for packaging:
 
 ```bash
 cd ../oie-web-client
