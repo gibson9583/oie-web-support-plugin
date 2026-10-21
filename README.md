@@ -1,6 +1,6 @@
 # OIE Web Support
 
-Web Support **1.2.0** is being prepared to bundle Web Client **1.2.0** and support OIE **4.5.2, 4.6.0, and 4.7.0**. Release packaging and full runtime validation on all three engines await the published Client 1.2.0 WAR.
+Web Support **1.2.0** bundles Web Client **1.2.0** and supports OIE **4.5.2, 4.6.0, and 4.7.0**.
 
 The complete [OIE web administrator](https://github.com/gibson9583/oie-web-client),
 shipped as one standard extension so the engine itself needs **no changes**. It
