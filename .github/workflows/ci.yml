@@ -28,10 +28,10 @@ jobs:
               assert os.environ['GITHUB_REF_NAME'] == 'v' + version
           print('Validated Web Support', version)
           PYTHON
-      - name: Obtain pinned OIE 4.6.0 compile inputs
+      - name: Obtain pinned OIE 4.5.2 compile inputs
         run: |
-          curl -fL --retry 3 -o oie.tar.gz https://github.com/OpenIntegrationEngine/engine/releases/download/v4.6.0/oie_unix_4_6_0.tar.gz
-          echo '7c82e79027e671277e1d78d0f7bbb1c53ddf1be476f1e80c2ddbfcf7855900ea  oie.tar.gz' | sha256sum -c -
+          curl -fL --retry 3 -o oie.tar.gz https://github.com/OpenIntegrationEngine/engine/releases/download/v4.5.2/oie_unix_4_5_2.tar.gz
+          echo 'd1923b3f8871f6ccd93e06060cd2695bbeb7496a24c119d36b8beceeb5322e58  oie.tar.gz' | sha256sum -c -
           mkdir engine-inputs
           tar -xzf oie.tar.gz -C engine-inputs \
             oie/server-lib/mirth-server.jar oie/server-lib/mirth-client-core.jar \

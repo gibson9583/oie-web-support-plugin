@@ -1,5 +1,7 @@
 # OIE Web Support
 
+Web Support **1.2.0** bundles Web Client **1.2.0** and supports OIE **4.5.2, 4.6.0, and 4.7.0**.
+
 The complete [OIE web administrator](https://github.com/gibson9583/oie-web-client),
 shipped as one standard extension so the engine itself needs **no changes**. It
 installs both the browser client and the engine-side APIs used for message trees,
@@ -105,8 +107,9 @@ updates itself through the store like any other extension.
 
 ## Build
 
-Requires an OIE/Mirth Connect installation (or built engine tree) for the engine
-jars and a built web-client WAR. The WAR is mandatory:
+Compile against stock OIE **4.5.2**, the oldest supported engine, using its
+installation jars. The compile baseline is separate from the supported engine
+versions. A built Web Client **1.2.0** WAR is mandatory for packaging:
 
 ```bash
 cd ../oie-web-client
