@@ -1,6 +1,6 @@
 # Web Support
 
-Web Support **1.2.0** bundles Web Client **1.2.0** and supports **OIE 4.5.2, 4.6.0, and 4.7.0 only**.
+Web Support **1.2.1** bundles Web Client **1.2.1** and supports **OIE 4.5.2, 4.6.0, and 4.7.0 only**.
 
 Installs the **OIE web administrator** in the engine's embedded web server,
 together with message-tree serialization through the engine's own data type
